@@ -76,6 +76,65 @@ output_distPlot <-  {
 
 ```
 
+### text
+```{r render_desctext}
+render_desctext <- renderText
+```
+
+```{r output_desctext}
+output_desctext <- paste0(
+  input_selectcity, "為分級上的", 
+  school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(地區屬性) %>% unlist() %>% unname(),
+  "學校，位處",
+  school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(縣市鄉鎮) %>% unlist() %>% unname(),
+  if(is.na(school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(原住民鄉分類) %>% unlist() %>% unname())){"。"}else{
+    paste0("，且其為原住民鄉分類上的",
+    school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(原住民鄉分類) %>% unlist() %>% unname(),"。")
+  }
+)
+```
+
+```{r render_desctext2}
+render_desctext2 <- renderText
+```
+
+```{r output_desctext2}
+output_desctext2 <- paste0(
+    "學生總計：",
+    school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(學生數總計) %>% unlist() %>% unname(),
+    "\n", "班級數總計：",
+    school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(班級數) %>% unlist() %>% unname(),
+    if(
+      is.na(school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(原住民學生比率) %>% unlist() %>% unname())){
+    "\n"
+  }else{
+    paste0("\n","原住民學生比率：",
+  school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(原住民學生比率) %>% unlist() %>% unname(),"\n")},
+  "學校網址：",
+  school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(網址) %>% unlist() %>% unname()
+  )
+```
+
+```{r render_maptitle}
+render_maptitle <- renderText
+```
+
+```{r output_maptitle}
+output_maptitle <- paste0(input_selectcity,"—",
+        school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(地區屬性) %>% unlist() %>% unname(),"學校位置")
+```
+
+```{r render_allplotlytitle}
+render_allplotlytitle <- renderText
+```
+
+```{r output_allplotlytitle}
+output_allplotlytitle <- paste0(
+  input_selectcity,"—","所屬地區指標"
+)
+```
+
+
 ### leaflet
 ```{r render_leafletPlot}
 render_leafletPlot <- renderLeaflet
@@ -88,11 +147,12 @@ output_leafletPlot <- {
   setView(
     lng = school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(經度) %>% unlist() %>% unname(), 
     lat= school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(緯度) %>% unlist() %>% unname(),
-    zoom = 10.3)    %>% 
+    zoom = 11)    %>% 
     addMarkers(
       lng = school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(經度) %>% unlist() %>% unname(),
       lat= school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(緯度) %>% unlist() %>% unname(),
-      popup = input_selectcity)  %>% 
+      popup = paste0(input_selectcity,":",
+        school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(地區屬性) %>% unlist() %>% unname()))  %>% 
     addCircleMarkers(
       data = sports %>% filter(
         縣市鄉鎮 == school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(縣市鄉鎮) %>% unlist() %>% unname()
@@ -109,10 +169,110 @@ output_leafletPlot <- {
         縣市鄉鎮 == school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(縣市鄉鎮) %>% unlist() %>% unname()
       ) %>% select(圖書館名稱) %>% unlist() %>% unname()
     )
-    
 }
 ```
 
 ### plotly
 
+```{r render_plotly1}
+render_plotly1 <- renderPlotly
+```
+
+```{r output_plotly1}
+output_plotly1 <- culture_lib_spt_plot_1_plotly %>% 
+  add_trace(
+    x=1,
+    y=school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(鄉鎮圖書館體育館總和) %>% unlist() %>% unname(),
+    type="scatter",mode="markers", name = "該校所屬鄉鎮市區", marker = list(color = "red")
+    ) %>% 
+  add_trace(
+    x=2,
+    y=school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(鄉鎮圖書館體育館總和) %>% unlist() %>% unname(),
+    type="scatter",mode="markers",name = "該校所屬鄉鎮市區", marker = list(color = "red"))
+```
+
+```{r render_plotly2}
+render_plotly2 <- renderPlotly
+```
+
+```{r output_plotly2}
+output_plotly2 <- life_density10909_plot_2_plotly %>% 
+  add_trace(
+    x=1,
+    y=school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(村里人口密度) %>% unlist() %>% unname(),
+    type="scatter",mode="markers", name = "該校所屬村里", marker = list(color = "red")
+    ) %>% 
+  add_trace(
+    x=2,
+    y=school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(村里人口密度) %>% unlist() %>% unname(),
+    type="scatter",mode="markers",name = "該校所屬村里", marker = list(color = "red"))
+```
+
+```{r render_plotly3}
+render_plotly3 <- renderPlotly
+```
+
+```{r output_plotly3}
+output_plotly3 <- life_conv_finance_plot_3_plotly %>% 
+  add_trace(
+    x=1,
+    y=school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(鄉鎮便利金融) %>% unlist() %>% unname(),
+    type="scatter",mode="markers", name = "該校所屬鄉鎮", marker = list(color = "red")
+    ) %>% 
+  add_trace(
+    x=2,
+    y=school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(鄉鎮便利金融) %>% unlist() %>% unname(),
+    type="scatter",mode="markers",name = "該校所屬鄉鎮", marker = list(color = "red"))
+```
+
+```{r render_plotly4}
+render_plotly4 <- renderPlotly
+```
+
+```{r output_plotly4}
+output_plotly4 <- life_hospital_plot_4_plotly %>% 
+  add_trace(
+    x=1,
+    y=school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(醫療院所家數) %>% unlist() %>% unname(),
+    type="scatter",mode="markers", name = "該校所屬鄉鎮", marker = list(color = "red")
+    ) %>% 
+  add_trace(
+    x=2,
+    y=school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(醫療院所家數) %>% unlist() %>% unname(),
+    type="scatter",mode="markers",name = "該校所屬鄉鎮", marker = list(color = "red"))
+```
+
+```{r render_plotly5}
+render_plotly5 <- renderPlotly
+```
+
+```{r output_plotly5}
+output_plotly5 <- digital_plot_5_plotly %>% 
+  add_trace(
+    x=1,
+    y=school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(鄉鎮基地台) %>% unlist() %>% unname(),
+    type="scatter",mode="markers", name = "該校所屬鄉鎮", marker = list(color = "red")
+    ) %>% 
+  add_trace(
+    x=2,
+    y=school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(鄉鎮基地台) %>% unlist() %>% unname(),
+    type="scatter",mode="markers",name = "該校所屬鄉鎮", marker = list(color = "red"))
+```
+
+```{r render_plotly6}
+render_plotly6 <- renderPlotly
+```
+
+```{r output_plotly6}
+output_plotly6 <- econ_aging_plot_6_plotly %>% 
+  add_trace(
+    x=1,
+    y=school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(村里老化指數) %>% unlist() %>% unname(),
+    type="scatter",mode="markers", name = "該校所屬村里", marker = list(color = "red")
+    ) %>% 
+  add_trace(
+    x=2,
+    y=school_109 %>% filter(縣市學校名稱 == input_selectcity) %>% select(村里老化指數) %>% unlist() %>% unname(),
+    type="scatter",mode="markers",name = "該校所屬村里", marker = list(color = "red"))
+```
 

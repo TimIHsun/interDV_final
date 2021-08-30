@@ -13,3 +13,20 @@ body {
   }
 
 */
+
+.plotly{
+  border:1px solid black;
+}
+
+.plotly2{
+  border:0;
+}
+
+.plotlytitle{
+  size: 45px;
+  text-align: center;
+}
+
+.plotlyborder{
+  margin-top: 10px;
+}

@@ -312,11 +312,6 @@ for(i in 1:length(school_109$經度)){
 }
 ```
 
-
-```{r}
-names(school_109)[names(school_109) == "經度"] <-"lng"
-names(school_109)[names(school_109) == "緯度"] <-"lat"
-```
 ## 山地鄉
 
 ```{r}
@@ -680,7 +675,7 @@ conv_finance_boxplotdata%>%
     axis.ticks = element_blank(),
     panel.background = element_blank(),
     panel.grid = element_line(color = "gray", linetype = "solid", size = 0.05)
-  )+ylab(label = NULL)+coord_cartesian(ylim = c(0,260)) -> life_conv_finance_plot_3
+  )+ylab(label = NULL)+xlab(label = NULL)+coord_cartesian(ylim = c(0,260)) -> life_conv_finance_plot_3
 
 
 
@@ -832,9 +827,9 @@ econ_aging_plot_6_plotly %>%
 
 ```{r}
 
-lng <- choosen_school_data %>% select(lng) %>% unlist() %>% unname()
+lng <- choosen_school_data %>% select(經度) %>% unlist() %>% unname()
 
-lat <- choosen_school_data %>% select(lat) %>% unlist() %>% unname()
+lat <- choosen_school_data %>% select(緯度) %>% unlist() %>% unname()
 
 city_county<- choosen_school_data %>% select(縣市鄉鎮) %>% unlist() %>% unname()
 
@@ -864,20 +859,20 @@ leaflet() %>%
 ### 資料包裝
 
 ```{r}
-# save(
-#   # plotly底圖*6
-#   culture_lib_spt_plot_1_plotly,
-#   life_density10909_plot_2_plotly,
-#   life_conv_finance_plot_3_plotly,
-#   life_hospital_plot_4_plotly,
-#   digital_plot_5_plotly,
-#   econ_aging_plot_6_plotly,
-#   # data
-#   library_data,
-#   sports,
-#   school_109,
-#   file = "support/data/finaldata.RData"
-# )
+save(
+  # plotly底圖*6
+  culture_lib_spt_plot_1_plotly,
+  life_density10909_plot_2_plotly,
+  life_conv_finance_plot_3_plotly,
+  life_hospital_plot_4_plotly,
+  digital_plot_5_plotly,
+  econ_aging_plot_6_plotly,
+  # data
+  library_data,
+  sports,
+  school_109,
+  file = "support/data/finaldata.RData"
+)
 ```
 
 

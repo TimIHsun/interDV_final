@@ -76,35 +76,157 @@ selectInput(
   
 ### Output
 
-```{r output_distPlot}
-output_distPlot <- shiny::plotOutput("distPlot")
+```{r output_leafletPlot}
+output_leafletPlot <- leafletOutput("leafletPlot")
+```
+
+```{r output_desctext}
+output_desctext <- textOutput("desctext")
+```
+
+```{r output_desctext2}
+output_desctext2 <- verbatimTextOutput("desctext2")
+```
+
+```{r output_maptitle}
+output_maptitle <- textOutput("maptitle")
+```
+
+```{r output_allplotlytitle}
+output_allplotlytitle <- textOutput("allplotlytitle")
 ```
 
 
+```{r output_plotly1}
+output_plotly1 <- plotlyOutput("plotly1")
+```
 
-```{r output_leafletPlot}
-output_leafletPlot <- leafletOutput("leafletPlot")
+```{r output_plotly2}
+output_plotly2 <- plotlyOutput("plotly2")
+```
+
+```{r output_plotly3}
+output_plotly3 <- plotlyOutput("plotly3")
+```
+
+```{r output_plotly4}
+output_plotly4 <- plotlyOutput("plotly4")
+```
+
+```{r output_plotly5}
+output_plotly5 <- plotlyOutput("plotly5")
+```
+
+```{r output_plotly6}
+output_plotly6 <- plotlyOutput("plotly6")
 ```
 ## =======================
 
 ### UI
+
+```{r}
+tags$div(
+tags$a(class="waves-effect waves-light btn modal-trigger", href="#modal1"," Modal"),
+
+  tags$div(id="modal1", class="modal", 
+    tags$div(class="modal-content", 
+      tags$h4(" Modal Header"),
+      tags$p(" A bunch of text")
+    ),
+    tags$div(class="modal-footer", 
+      tags$a(href="#!", class="modal-close waves-effect waves-green btn-flat"," 關閉")
+    )
+  )
+)
+```
+
 
 ```{r ui}
 ui <- tags$body(
   fluidPage(
 
     # Application title
-    titlePanel("UI from ui.Rmd: Old Faithful Geyser Data"),
+    tags$div(
+      class = "card-panel teal lighten-2 z-depth-2",
+    titlePanel("偏遠地區學校儀表板")
+    ),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
-            input_selectcity
+            input_selectcity,
+            output_desctext,
+            output_desctext2,
+            tags$div(
+              tags$hr()
+            )
         ),
 
         # Show a plot of the generated distribution
         mainPanel(
-           output_leafletPlot
+          tags$div(
+            class="row",
+            tags$div(
+              class = "col s12 m12 l12 card-panel #ffcc80 orange lighten-3 z-depth-1",
+              h3(output_maptitle)
+            ),
+            output_leafletPlot
+          ),
+           tags$div(
+             class = "row",
+             tags$div(
+               class = "col s12 m12 l12 card-panel #ffcc80 orange lighten-3 z-depth-1",
+               h3(output_allplotlytitle)
+             ),
+             tags$div(
+               class = "col s4 m4 l4 plotlyborder",
+               tags$div(
+                 class="plotlytitle #fff8e1 amber lighten-5 z-depth-1",
+                 "鄉鎮圖書館體育館總和"
+               ),
+               output_plotly1
+             ),
+             tags$div(
+               class = "col s4 m4 l4 plotlyborder",
+               tags$div(
+                 class="plotlytitle #fff8e1 amber lighten-5 z-depth-1",
+                 "村里人口密度"
+               ),
+               output_plotly2
+             ),
+             tags$div(
+               class = "col s4 m4 l4 plotlyborder",
+               tags$div(
+                 class="plotlytitle #fff8e1 amber lighten-5 z-depth-1",
+                 "鄉鎮便利商店及金融保險業家數"
+               ),
+               output_plotly3
+             ),
+             tags$div(
+               class = "col s4 m4 l4 plotlyborder",
+               tags$div(
+                 class="plotlytitle #fff8e1 amber lighten-5 z-depth-1",
+                 "鄉鎮醫療院所家數"
+               ),
+               output_plotly4
+             ),
+             tags$div(
+               class = "col s4 m4 l4 plotlyborder",
+               tags$div(
+                 class="plotlytitle #fff8e1 amber lighten-5 z-depth-1",
+                 "鄉鎮基地台數"
+               ),
+               output_plotly5
+             ),
+             tags$div(
+               class = "col s4 m4 l4 plotlyborder",
+               tags$div(
+                 class="plotlytitle #fff8e1 amber lighten-5 z-depth-1",
+                "村里老化指數"
+               ),
+               output_plotly6
+             )
+           )
         )
     )
 ))
@@ -120,6 +242,7 @@ ui <- tags$body(
 ```{r}
 web$browse()
 ```
+
 
 
 

@@ -1,0 +1,33 @@
+body {
+  font-family: "Noto Serif TC", sans-serif;
+}
+/*
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+  }
+
+  main {
+    flex: 1 0 auto;
+  }
+
+*/
+
+.plotly{
+  border:1px solid black;
+}
+
+.plotly2{
+  border:0;
+}
+
+.plotlytitle{
+  size: 32px;
+  text-align: center;
+}
+
+.plotlyborder{
+  margin-top: 10px;
+  margin-right: 10px;
+}
