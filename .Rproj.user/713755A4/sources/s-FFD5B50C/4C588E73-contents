@@ -30,3 +30,7 @@ body {
 .plotlyborder{
   margin-top: 10px;
 }
+
+.plotlytitlefont{
+  font-size: 40.88px;
+}

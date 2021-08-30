@@ -124,8 +124,8 @@ output_plotly6 <- plotlyOutput("plotly6")
 
 ### UI
 
-```{r}
-tags$div(
+```{r modal}
+modal <- tags$div(
 tags$a(class="waves-effect waves-light btn modal-trigger", href="#modal1"," Modal"),
 
   tags$div(id="modal1", class="modal", 
@@ -176,7 +176,13 @@ ui <- tags$body(
              class = "row",
              tags$div(
                class = "col s12 m12 l12 card-panel #ffcc80 orange lighten-3 z-depth-1",
-               h3(output_allplotlytitle)
+               tags$div( 
+                 class = "col s11 m11 l11 ",
+               h3(output_allplotlytitle)),
+               tags$div(
+                class = "col s1 m1 l1",
+                h3(""),modal 
+               )
              ),
              tags$div(
                class = "col s4 m4 l4 plotlyborder",

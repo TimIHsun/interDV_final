@@ -3,7 +3,7 @@
     "path": "~/Documents/GitHub/interDV_final/ui.Rmd",
     "project_path": "ui.Rmd",
     "type": "r_markdown",
-    "hash": "589131379",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1630281677573.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "178,40",
-        "scrollLine": "169"
+        "cursorPosition": "177,22",
+        "scrollLine": "172"
     },
     "folds": "",
-    "lastKnownWriteTime": 1630312011,
+    "lastKnownWriteTime": 1630314986,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1630312012002,
+    "last_content_update": 1630314986839,
     "read_only": false,
     "read_only_alternatives": []
 }
