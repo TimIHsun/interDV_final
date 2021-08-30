@@ -1,0 +1,1000 @@
+---
+title: "EDA"
+author: "邱奕勳"
+date: "7/12/2021"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+library(plotly)
+library(dplyr)
+library(readxl)
+library(stringr)
+library(sysfonts)
+library(showtext)
+library(tidyselect)
+library(purrr)
+library(readr)
+library(patchwork)
+library(leaflet)
+font_add("QYuan","cwTeXQYuan-Medium.ttf") # 新增字體
+showtext_auto(enable=TRUE) #啟用字體
+```
+## 縣市學校總數
+
+```{r}
+sheet <- as.character(103:109)
+
+allschool <-  map_df(
+    sheet,
+    read_excel, path = "/Users/tim/Documents/GitHub/interactive_dv_final/final/support/data/school/allschool/allschool.xls"
+    ) 
+
+names(allschool) %>% str_replace_all("\n","") -> names(allschool)
+
+allschool %>% select("縣市別","國民小學","國民中學","學年") -> allschool
+
+allschool %>% mutate(校數總和 = 國民小學 + 國民中學) -> allschool
+```
+
+
+## 偏遠地區國民中小學名錄
+
+
+### 資料處理
+
+一次載入資料 (https://stackoverflow.com/questions/11433432/how-to-import-multiple-csv-files-at-once)
+
+```{r}
+schoolfiles <- list.files(path = "./support/data/school", pattern = "*.xls", all.files = T, full.names = T)
+
+schoollist <- sapply(schoolfiles,read_xls) #103~109年
+
+names(schoollist) <- str_sub(schoolfiles,23,33)
+```
+
+
+#### 先以109為例 
+
+政府的資料不適合直接使用，他會在檔案裡面寫標題，而且colnames還放在兩個cell
+```{r}
+schoollist$faraway_109 <- read_excel("support/data/school/faraway_109.xls",
+col_names = FALSE, skip = 3, #skip first three rows
+    col_types = c("text", "skip", "text",  #skip unneeded columns
+        "text", "text", "text", "skip", "text", 
+        "text", "text", "text", "text", "text", 
+        "skip", "skip", "text", "text", "skip", 
+        "skip"))
+
+# change colnames 
+str_c(
+  str_replace_na(schoollist$faraway_109[1,],""), 
+  str_replace_na(schoollist$faraway_109[2,],"")
+  ) -> colnames109
+
+colnames(schoollist$faraway_109) <- colnames109
+
+# remove first two rows (they are the original colname subparts )
+
+schoollist$faraway_109[-c(1,2),] -> schoollist$faraway_109
+
+# column types
+
+
+for(i in c("班級數","學生數總計","原住民學生比率","上學年畢業生數總計")){
+  schoollist$faraway_109[,i][[1]] %>% as.numeric() -> schoollist$faraway_109[,i][[1]]
+}
+```
+發現有兩排NA，剔除他們
+```{r}
+schoollist$faraway_109[is.na(schoollist$faraway_109$地區屬性),]
+
+which(is.na(schoollist$faraway_109$地區屬性))
+
+schoollist$faraway_109[-which(is.na(schoollist$faraway_109$地區屬性)),] -> schoollist$faraway_109
+```
+
+有兩個台南市類別："[11]臺南市" "[21]臺南市"
+```{r}
+unique(schoollist$faraway_109$縣市名稱)
+
+#分離代碼和縣市名稱
+schoollist$faraway_109 %>% mutate(
+  縣市代碼=str_sub(縣市名稱,2,3), 
+  縣市名稱=str_sub(縣市名稱,5,)
+  ) -> schoollist$faraway_109
+```
+新增變數"年",以利merge後區別年份
+```{r}
+schoollist$faraway_109 %>% mutate(
+  年份 = names(schoollist[7]) %>% str_sub(9,)
+) -> schoollist$faraway_109
+```
+
+
+#### 103~108年
+```{r}
+listend  <- length(schoollist)-1 #扣掉109
+
+for (i in 1:6){
+  schoollist[[i]][-c(1,2),] ->  schoollist[[i]] #頭兩排NA
+  
+  #first 2 rows to form colnames
+  str_c( 
+  str_replace_na(schoollist[[i]][1,],""), 
+  str_replace_na(schoollist[[i]][2,],"")
+  ) -> colnames_temp
+
+  colnames(schoollist[[i]]) <- colnames_temp
+  
+  schoollist[[i]][-c(1,2),] ->  schoollist[[i]]
+}
+
+
+for (i in 1:listend){
+  
+  # schoollist[[i]] %>% mutate(
+  #   縣市代碼=str_sub(縣市名稱,2,3), 
+  #   縣市名稱=str_sub(縣市名稱,5,)
+  # ) -> schoollist[[i]]
+  # -> Can't transform a data frame with duplicate names.
+  # 因為colnames在剛才重新命名後有重複的
+  
+  #先取出需要的欄位，剛好撇除那些重複的colnames
+  schoollist[[i]] %>% select(colnames(schoollist$faraway_109)[-c(14,15)]) -> schoollist[[i]]
+  
+  schoollist[[i]] %>% mutate(
+    縣市代碼=str_sub(縣市名稱,2,3),
+    縣市名稱=str_sub(縣市名稱,5,)
+  ) -> schoollist[[i]]
+  
+  
+}
+
+for (i in 1:listend) {
+  schoollist[[i]][!(is.na(schoollist[[i]][,"學校名稱"])),] -> schoollist[[i]]
+  
+  for(x in c("班級數","學生數總計","原住民學生比率","上學年畢業生數總計")){
+  schoollist[[i]][,x][[1]] %>% as.numeric() -> schoollist[[i]][,x][[1]]
+  }
+  
+schoollist[i][[1]][,"年份"] <- names(schoollist[i]) %>% str_sub(9,)
+
+
+}
+
+#NAs introduced by coercionNAs introduced by coercionNAs introduced by coercionNAs introduced by coercion，因為原先 character有部分value是"-"，表示缺失值，轉成numeric 之後會變成NA
+```
+
+
+
+#### merge
+
+```{r}
+merged_schoollist <- schoollist[1][[1]]
+
+for(i in 2:length(schoollist)){
+  merge(merged_schoollist, schoollist[i][[1]], all = T) -> merged_schoollist
+}
+
+merged_schoollist$年份 %>% as.numeric() -> merged_schoollist$年份
+
+merged_schoollist %>% mutate(縣市鄉鎮 = str_c(縣市名稱,鄉鎮市區)) -> merged_schoollist
+```
+
+
+#### 109
+
+```{r}
+schoollist$faraway_109 -> school_109
+
+str_locate(school_109$地址,"]")[,"end"] %>% unique()
+
+school_109$地址 %>% str_sub(2,4) -> school_109$郵遞區號
+
+school_109$地址 %>% str_sub(6,) -> school_109$地址
+
+school_109$資料廣度 <- "偏校"
+```
+
+##### 經緯度
+```{r}
+school_109 %>% mutate(縣市學校名稱 = str_c(縣市名稱,學校名稱)) -> school_109
+```
+
+```{r}
+elementary_location108 <- read_excel("support/data/school/location/elementary_location108.xls")
+
+elementary_location108 %>% mutate(縣市學校名稱  = str_c(縣市別,學校名稱)) -> elementary_location108
+
+names(elementary_location108)[11] <- "經度"
+names(elementary_location108)[12] <- "緯度"
+
+junior_location108 <- read_excel("support/data/school/location/junior_location108.xls")
+
+junior_location108 %>% mutate(縣市學校名稱  = str_c(縣市別,學校名稱)) -> junior_location108
+
+names(junior_location108)[11] <- "經度2"
+names(junior_location108)[12] <-"緯度2"
+
+```
+
+```{r}
+merge(
+  school_109,
+  elementary_location108 %>% select(經度,緯度,縣市學校名稱), by="縣市學校名稱", all.x = T) -> school_109
+
+merge(
+  school_109,
+  junior_location108 %>% select(經度2,緯度2,縣市學校名稱), by=c("縣市學校名稱"), all.x = T) -> school_109
+
+
+school_109[is.na(school_109$經度),c("經度","緯度")] <- school_109[is.na(school_109$經度),c("經度2","緯度2")]
+
+school_109[,!(names(school_109) %in%c("經度2","緯度2"))] ->school_109
+
+school_109[is.na(school_109$經度),]
+```
+
+
+```{r}
+# https://github.com/snexuz/TWD97TM2toWGS84/blob/master/TWD97TM2toWGS84.R
+TWD97TM2toWGS84 <- function (input_lat, input_lon){  
+  # input_lat: TWD97橫座標, 南北緯度, latitude N
+  # input_lon: TWD97縱座標, 東西經度, longitude E
+  
+  input_lat <- input_lat %>% as.character %>% as.numeric()
+  input_lon <- input_lon %>% as.character %>% as.numeric()
+  
+  a = 6378137.0
+  b = 6356752.314245
+  lon0 = 121 * pi / 180
+  k0 = 0.9999
+  dx = 250000
+  dy = 0
+  e = (1 - b^2 / a^2)^0.5
+  
+  
+  x =  input_lat - dx # input_lat: TWD97橫座標, 緯度, latitude
+  y =  input_lon - dy # input_lon: TWD97縱座標, 經度, longitude
+  
+  M = y/k0
+  
+  mu = M/(a*(1.0 - ( e**2 )/4.0 - 3* (e**4)/64.0 - 5* (e**6)/256.0))
+  e1 = (1.0 -  ((1.0 -  (e**2))**0.5)) / (1.0 +  ((1.0 -  (e**2))**0.5))
+  
+  J1 = (3*e1/2 - 27* (e1**3)/32.0)
+  J2 = (21* (e1**2)/16 - 55* (e1**4)/32.0)
+  J3 = (151* (e1**3)/96.0)
+  J4 = (1097* (e1**4)/512.0)
+  
+  fp = mu + J1*sin(2*mu) + J2*sin(4*mu) + J3*sin(6*mu) + J4*sin(8*mu)
+  
+  e2 =  ((e*a/b)**2)
+  C1 =  (e2*cos(fp)**2)
+  T1 =  (tan(fp)**2)
+  R1 = a*(1- (e**2))/ ((1- (e**2)* (sin(fp)**2))**(3.0/2.0))
+  N1 = a/ ((1- (e**2)* (sin(fp)**2))**0.5)
+  
+  D = x/(N1*k0)
+  
+  #緯度計算 latitude
+  Q1 = N1*tan(fp)/R1
+  Q2 = ( (D**2)/2.0)
+  Q3 = (5 + 3*T1 + 10*C1 - 4* (C1**2) - 9*e2)* (D**4)/24.0
+  Q4 = (61 + 90*T1 + 298*C1 + 45* (T1**2) - 3* (C1**2) - 252*e2)* (D**6)/720.0
+  lat = fp - Q1*(Q2 - Q3 + Q4)
+  
+  #經度計算 longitude
+  Q5 = D
+  Q6 = (1 + 2*T1 + C1)* (D**3)/6
+  Q7 = (5 - 2*C1 + 28*T1 - 3* (C1**2) + 8*e2 + 24* (T1**2))* (D**5)/120.0
+  lon = lon0 + (Q5 - Q6 + Q7)/cos(fp)
+  
+  
+  lat = (lat*180) /pi #南北緯度  latitude 
+  lon = (lon*180)/ pi #東西經度  longitude
+
+  WGS = list(lat = lat, lon = lon)
+  return(WGS)
+}
+```
+
+```{r}
+TWD97TM2toWGS84(school_109[1,"經度"],school_109[1,"緯度"])
+
+for(i in 1:length(school_109$經度)){
+  
+  TWD97TM2toWGS84(school_109[i,"經度"],school_109[i,"緯度"])$lon -> school_109[i,"經度"]
+  
+  TWD97TM2toWGS84(school_109[i,"經度"],school_109[i,"緯度"])$lat -> school_109[i,"緯度"]
+}
+```
+
+
+```{r}
+names(school_109)[names(school_109) == "經度"] <-"lng"
+names(school_109)[names(school_109) == "緯度"] <-"lat"
+```
+## 山地鄉
+
+```{r}
+aboriginal <- read_excel("support/data/7culture/aboriginal.xlsx", col_names = F)
+
+colnames(aboriginal) <- c("縣市名稱","鄉鎮市區","原住民鄉分類")
+
+aboriginal %>% mutate(縣市鄉鎮 = str_c(縣市名稱,鄉鎮市區)) -> aboriginal
+```
+
+```{r}
+merge(merged_schoollist, aboriginal, all.x = T) -> merged_schoollist
+
+school_109 %>% mutate(縣市鄉鎮 = str_c(縣市名稱,鄉鎮市區)) -> school_109
+merge(school_109, aboriginal, all.x = T) -> school_109
+```
+
+## 圖書館、體育館
+```{r}
+library_data <- read_csv("support/data/7culture/library.csv")
+
+sports <- read_excel("support/data/7culture/sports.xls")
+```
+
+
+```{r}
+# 計算109各縣市鄉鎮圖書館數量
+library_data %>% mutate(縣市鄉鎮 = str_c(所屬縣市,行政區)) -> library_data
+
+library_data %>% 
+  group_by(縣市鄉鎮) %>%
+  summarise(鄉鎮圖書館總數 = length(圖書館名稱)) -> library_sum
+  
+merge(school_109, library_sum, all.x = T) -> school_109
+
+names(library_data) [names(library_data) == "經度"] <- "lng"
+
+names(library_data) [names(library_data) == "緯度"] <- "lat"
+```
+
+```{r}
+
+sports %>% 
+  mutate(縣市鄉鎮 = str_c(縣市,行政區)) -> sports
+
+# for leaflet
+names(sports) [names(sports) == "經度"] <- "lng"
+
+names(sports) [names(sports) == "緯度"] <- "lat"
+
+# 計算109各縣市鄉鎮體育館數量
+sports %>% 
+  mutate(縣市鄉鎮 = str_c(縣市,行政區)) %>%
+  group_by(縣市鄉鎮) %>%
+  summarise(鄉鎮體育館總數 = length(場館名稱)) -> sports_sum
+
+
+merge(school_109, sports_sum, all.x = T) -> school_109
+
+# NA為0
+school_109[school_109$鄉鎮體育館總數 %>% is.na(),"鄉鎮體育館總數"] <- 0
+```
+
+```{r}
+school_109 %>% mutate(鄉鎮圖書館體育館總和 = 鄉鎮體育館總數+鄉鎮圖書館總數 ) -> school_109
+```
+
+```{r}
+merge(library_sum, sports_sum) -> library_sports
+
+#為了boxplot分組
+library_sports %>% 
+  mutate(鄉鎮圖書館體育館總和=鄉鎮圖書館總數+鄉鎮體育館總數,資料廣度="全台") -> library_sports
+```
+
+## 醫療院所
+
+```{r}
+
+hospital10906 <- read.csv(
+  "support/data/8life/hospital10906.csv", fileEncoding = "Big5",skip=1
+  )
+
+hospital10906 %>% mutate(縣市鄉鎮=str_c(縣市名稱,鄉鎮市區名稱)) -> hospital10906
+
+hospital10906 %>% mutate(資料廣度 = "全台") -> hospital10906
+
+merge(
+  school_109,
+  hospital10906 %>% select(縣市鄉鎮,醫療院所家數),
+  all.x = T
+) -> school_109
+```
+
+
+## 人口密度、老化指數
+
+```{r}
+
+# 建立參數 縣市鄉鎮市區村里，因為人口密度資料是村裡層級
+school_109$縣市鄉鎮市區村里 <- str_sub(school_109$地址,1,str_locate(school_109$地址,".{5,}[村里]")[,"end"])
+
+read_excel("support/data/8life/density10909.xlsx", skip = 2) -> density_aging_10909
+
+density_aging_10909 %>% mutate(縣市鄉鎮市區村里 = str_c(縣市名稱,鄉鎮市區名稱,村里名稱)) -> density_aging_10909
+
+names(density_aging_10909)[c(9,13)] <- c("村里人口密度","村里老化指數")
+
+merge(
+  school_109,
+  density_aging_10909 %>% select(縣市鄉鎮市區村里,村里人口密度,村里老化指數), 
+  all.x = T,
+  by = "縣市鄉鎮市區村里"
+) -> school_109
+
+density_aging_10909 %>% mutate(資料廣度 = "全台") -> density_aging_10909
+```
+
+## 郵政、金融機構及便利商店之總數
+
+```{r}
+# 金融保險業
+business10906 <- read_csv("support/data/8life/business10906.csv", locale = locale(encoding = "Big5"), skip=1) %>% select("縣市代碼","縣市名稱","鄉鎮市區代碼","鄉鎮市區代碼","鄉鎮市區名稱","金融及保險業","資料時間")
+
+business10906 %>% 
+  mutate(縣市鄉鎮=str_c(縣市名稱,鄉鎮市區名稱)) -> business10906
+
+merge(school_109, business10906 %>% select(縣市鄉鎮,金融及保險業), all.x = T) -> school_109
+
+school_109$金融及保險業 %>% is.na() %>% sum()
+```
+
+
+```{r}
+ConvStore <- read_csv("support/data/8life/ConvStore.csv")
+
+ConvStore %>% 
+  mutate(縣市名稱 = str_sub(分公司地址,1,3)) -> ConvStore
+
+`%!in%` <- negate(`%in%`)
+
+ConvStore %>% 
+  filter( 
+    分公司狀態 == "01", #01核准設立
+    縣市名稱%!in%c("臺北縣","台北縣","臺南縣","桃園縣","高雄縣","臺中縣","苗栗市","彰化市","台北市")
+    ) %>% 
+  mutate(縣市名稱 = str_sub(分公司地址,1,3)) -> ConvStore
+
+ConvStore$縣市名稱 %>% unique()
+
+ConvStore$分公司地址 %>% str_locate("[縣,市].{1,3}[鄉,鎮,市,區]") -> picks
+
+ConvStore$分公司地址[2]%>% str_sub(picks[2,"start"]+1,picks[2,"end"])
+
+for(i in 1:length(ConvStore$分公司地址)){
+  ConvStore$分公司地址[i]%>% str_sub(picks[i,"start"]+1,picks[i,"end"]) -> ConvStore[i,"鄉鎮市區"]
+}
+
+ConvStore %>% mutate(縣市鄉鎮 = str_c(縣市名稱,鄉鎮市區)) -> ConvStore
+
+
+merge( 
+  school_109,
+  ConvStore %>% 
+    filter(!is.na(縣市鄉鎮)) %>%
+    group_by(縣市鄉鎮) %>%
+    summarise(鄉鎮便利商店總數=length(公司名稱)),
+  all.x = T
+  ) -> school_109
+
+# NA 來自沒有配對的鄉鎮市區資料，而無配對鄉鎮市區的資料有兩種可能 1. 該鄉鎮市區的資料為0 2. 該鄉鎮市區的名稱在拆解地址的時候有NA，無法抓取
+school_109$縣市鄉鎮 %in% ConvStore$縣市鄉鎮 -> TF_conv
+
+sum(TF_conv==F)
+
+sum(is.na(school_109$鄉鎮便利商店總數))
+```
+
+```{r}
+school_109 %>% mutate(鄉鎮便利金融 = 金融及保險業 + 鄉鎮便利商店總數) -> school_109
+```
+
+```{r}
+
+merge(
+  ConvStore %>% 
+    filter(!is.na(縣市鄉鎮)) %>%
+    group_by(縣市鄉鎮) %>%
+    summarise(鄉鎮便利商店總數=length(公司名稱)),
+  business10906 %>% select(縣市鄉鎮,金融及保險業)
+) -> conv_finance_data
+
+conv_finance_data %>% 
+  mutate(
+    鄉鎮便利金融 = 鄉鎮便利商店總數 + 金融及保險業,
+    資料廣度 = "全台") -> conv_finance_data
+```
+
+
+## 工商家數
+```{r}
+business10906_2 <- read_csv("support/data/8life/business10906.csv", locale = locale(encoding = "Big5"), skip=1) %>% select("縣市代碼","縣市名稱","鄉鎮市區代碼","鄉鎮市區代碼","鄉鎮市區名稱","工商業總家數","資料時間")
+
+business10906_2 %>% mutate(縣市鄉鎮 = str_c(縣市名稱,鄉鎮市區名稱)) -> business10906_2
+
+merge(
+  school_109,
+  business10906_2 %>% select(縣市鄉鎮,工商業總家數),
+  all.x = T
+) -> school_109
+```
+
+## 行動通信基地臺數目
+
+```{r}
+digital1090630 <- read_excel("support/data/9digital/行動通信業務基地臺統計(區分鄉鎮).xlsx") %>% filter(統計期=="1090630")
+
+names(digital1090630)[c(2,5)] <- c("縣市鄉鎮","鄉鎮基地台")
+
+digital1090630$鄉鎮基地台 %>% as.numeric() -> digital1090630$鄉鎮基地台
+
+merge(
+  school_109,
+  digital1090630 %>% select(縣市鄉鎮,鄉鎮基地台),
+  all.x = T
+) -> school_109
+
+digital1090630 %>% mutate(資料廣度 = "全台") -> digital1090630
+```
+
+## =========
+## 圖
+
+```{r}
+#確認各縣市內沒有學校名稱重複
+school_109 %>% 
+  mutate(test = str_c(school_109$縣市名稱,school_109$學校名稱)) %>% 
+  count(test) %>% 
+  arrange(desc(n))
+```
+
+```{r}
+# mock test
+county_name <-"南投縣"
+school_name <- "縣立清水國小"
+
+school_109 %>% 
+  filter(縣市名稱 == county_name & 學校名稱 == school_name) -> choosen_school_data
+```
+
+### 圖書館、體育館
+
+```{r}
+#全台
+rbind(
+  library_sports %>% select(資料廣度,鄉鎮圖書館體育館總和),
+  school_109 %>% select(資料廣度,鄉鎮圖書館體育館總和)
+) -> library_sports_boxplot_data
+```
+
+
+```{r}
+#choosen school
+choosen_school_data %>% 
+  select(鄉鎮圖書館體育館總和) %>% unlist()  -> 該校所屬鄉鎮圖書館體育館總和
+```
+
+```{r}
+library_sports_boxplot_data %>% 
+  ggplot(aes(x=資料廣度, y =鄉鎮圖書館體育館總和))+
+  geom_boxplot()+
+  theme(
+    axis.ticks = element_blank(),
+    panel.background = element_blank(),
+    panel.grid = element_line(color = "gray", linetype = "solid", size = 0.05)
+  )+ylab(label = NULL)+xlab(label = NULL)+coord_cartesian(ylim = c(0,85))-> culture_lib_spt_plot_1
+
+ggplotly(culture_lib_spt_plot_1) -> culture_lib_spt_plot_1_plotly
+
+
+culture_lib_spt_plot_1_plotly$x$data <- lapply(
+  culture_lib_spt_plot_1_plotly$x$data, FUN = function(x){
+  x$marker = list(opacity = 0)
+  return(x)}
+  )
+
+culture_lib_spt_plot_1_plotly %>% 
+  add_trace(
+    x=1,y=該校所屬鄉鎮圖書館體育館總和,
+    type="scatter",mode="markers", name = "該校所屬鄉鎮市區", marker = list(color = "red")
+    ) %>% 
+  add_trace(
+    x=2,y=該校所屬鄉鎮圖書館體育館總和,
+    type="scatter",mode="markers",name = "該校所屬鄉鎮市區", marker = list(color = "red"))
+```
+
+### 人口密度
+```{r}
+# 全台
+rbind(
+  density_aging_10909 %>% select(資料廣度,村里人口密度),
+  school_109 %>% select(資料廣度,村里人口密度)) -> density_10909_boxplotdata
+```
+
+```{r}
+# choosen school
+
+choosen_school_data %>% 
+  select(村里人口密度) %>% unlist() -> 該校所屬村里人口密度
+```
+
+```{r}
+density_10909_boxplotdata %>% 
+  ggplot(aes(x=資料廣度, y =村里人口密度))+
+  geom_boxplot()+
+  theme(
+    axis.ticks = element_blank(),
+    panel.background = element_blank(),
+    panel.grid = element_line(color = "gray", linetype = "solid", size = 0.05)
+  )+ylab(label = NULL)+xlab(label = NULL)+coord_cartesian(ylim = c(0,36000)) -> life_density10909_plot_2
+
+ggplotly(life_density10909_plot_2) -> life_density10909_plot_2_plotly
+
+life_density10909_plot_2_plotly$x$data <- lapply(
+  life_density10909_plot_2_plotly$x$data, FUN = function(x){
+  x$marker = list(opacity = 0)
+  return(x)}
+)
+
+life_density10909_plot_2_plotly %>% 
+  add_trace(
+    x=1,y=該校所屬村里人口密度,
+    type="scatter",mode="markers", name = "該校所屬村里", marker = list(color = "red")
+    ) %>% 
+  add_trace(
+    x=2,y=該校所屬村里人口密度,
+    type="scatter",mode="markers",name = "該校所屬村里", marker = list(color = "red"))
+```
+
+### 金融及便利商店
+
+```{r}
+#全台
+rbind(
+  conv_finance_data %>% select(資料廣度, 鄉鎮便利金融),
+  school_109 %>% select(資料廣度, 鄉鎮便利金融)
+) -> conv_finance_boxplotdata
+```
+
+```{r}
+#choosen school
+
+choosen_school_data %>% select(鄉鎮便利金融) %>% unlist() -> 該校所屬鄉鎮便利商店及金融保險業家數
+```
+
+```{r}
+conv_finance_boxplotdata%>% 
+  ggplot(aes(x=資料廣度, y =鄉鎮便利金融))+
+  geom_boxplot(outlier.shape = NA)+
+  theme(
+    axis.ticks = element_blank(),
+    panel.background = element_blank(),
+    panel.grid = element_line(color = "gray", linetype = "solid", size = 0.05)
+  )+ylab(label = NULL)+coord_cartesian(ylim = c(0,260)) -> life_conv_finance_plot_3
+
+
+
+
+ggplotly(life_conv_finance_plot_3) -> life_conv_finance_plot_3_plotly
+
+
+life_conv_finance_plot_3_plotly$x$data <- lapply(
+  life_conv_finance_plot_3_plotly$x$data, FUN = function(x){
+  x$marker = list(opacity = 0)
+  return(x)})
+
+life_conv_finance_plot_3_plotly %>% 
+  add_trace(
+    x=1,y=該校所屬鄉鎮便利商店及金融保險業家數,
+    type="scatter",mode="markers", name = "該校所屬鄉鎮市區", marker = list(color = "red")
+    ) %>% 
+  add_trace(
+    x=2,y=該校所屬鄉鎮便利商店及金融保險業家數,
+    type="scatter",mode="markers",name = "該校所屬鄉鎮市區", marker = list(color = "red"))
+```
+
+
+### 醫療院所
+```{r}
+rbind(
+  hospital10906 %>% select(資料廣度,醫療院所家數 ),
+  school_109 %>% select(資料廣度, 醫療院所家數)
+  ) -> hospital10906_boxplot_data
+```
+
+```{r}
+# choosen school
+
+choosen_school_data %>% select(醫療院所家數) %>% unlist() -> 該校所屬鄉鎮醫療院所家數
+```
+
+```{r}
+hospital10906_boxplot_data%>% 
+  ggplot(aes(x=資料廣度, y =醫療院所家數))+
+  geom_boxplot(outlier.shape = NA)+
+  theme(
+    axis.ticks = element_blank(),
+    panel.background = element_blank(),
+    panel.grid = element_line(color = "gray", linetype = "solid", size = 0.05)
+  )+ylab(label = NULL)+coord_cartesian(ylim = c(0,160)) -> life_hospital_plot_4
+
+ggplotly(life_hospital_plot_4) -> life_hospital_plot_4_plotly
+
+life_hospital_plot_4_plotly$x$data <- lapply(
+  life_hospital_plot_4_plotly$x$data, FUN = function(x){
+  x$marker = list(opacity = 0)
+  return(x)}
+)
+
+life_hospital_plot_4_plotly %>% 
+  add_trace(
+    x=1,y=該校所屬鄉鎮醫療院所家數,
+    type="scatter",mode="markers", name = "該校所屬鄉鎮市區", marker = list(color = "red")
+    ) %>% 
+  add_trace(
+    x=2,y=該校所屬鄉鎮醫療院所家數,
+    type="scatter",mode="markers",name = "該校所屬鄉鎮市區", marker = list(color = "red"))
+```
+
+# 基地台數量
+```{r}
+rbind(
+  digital1090630 %>% select(資料廣度, 鄉鎮基地台),
+  school_109 %>% select(資料廣度, 鄉鎮基地台)
+) -> digital1090630_boxplotdata
+```
+
+```{r}
+choosen_school_data %>% select(鄉鎮基地台) %>% unlist() -> 該校所屬鄉鎮基地台數
+```
+
+```{r}
+digital1090630_boxplotdata %>% 
+  ggplot(aes(x=資料廣度, y =鄉鎮基地台))+
+  geom_boxplot(outlier.shape = NA)+
+  theme(
+    axis.ticks = element_blank(),
+    panel.background = element_blank(),
+    panel.grid = element_line(color = "gray", linetype = "solid", size = 0.05)
+  )+ylab(label = NULL)+coord_cartesian(ylim = c(0,760)) -> digital_plot_5
+
+ggplotly(digital_plot_5) -> digital_plot_5_plotly
+
+digital_plot_5_plotly$x$data <- lapply(
+  digital_plot_5_plotly$x$data, FUN = function(x){
+  x$marker = list(opacity = 0)
+  return(x)}
+)
+
+digital_plot_5_plotly %>% 
+  add_trace(
+    x=1,y=該校所屬鄉鎮基地台數,
+    type="scatter",mode="markers", name = "該校所屬鄉鎮市區", marker = list(color = "red")
+    ) %>% 
+  add_trace(
+    x=2,y=該校所屬鄉鎮基地台數,
+    type="scatter",mode="markers",name = "該校所屬鄉鎮市區", marker = list(color = "red"))
+```
+
+
+### 老化指數
+
+```{r}
+rbind(
+  density_aging_10909 %>% select(資料廣度, 村里老化指數),
+  school_109 %>% select(資料廣度, 村里老化指數)
+) -> aging_boxplotdata
+```
+
+```{r}
+choosen_school_data %>% select(村里老化指數) %>% unlist() -> 該校所屬村里老化指數
+```
+
+```{r}
+aging_boxplotdata %>% 
+  ggplot(aes(x=資料廣度, y =村里老化指數))+
+  geom_boxplot(outlier.shape = NA)+
+  theme(
+    axis.ticks = element_blank(),
+    panel.background = element_blank(),
+    panel.grid = element_line(color = "gray", linetype = "solid", size = 0.05)
+  )+ylab(label = NULL)+coord_cartesian(ylim = c(0,600)) -> econ_aging_plot_6
+
+ggplotly(econ_aging_plot_6) -> econ_aging_plot_6_plotly
+
+econ_aging_plot_6_plotly$x$data <- lapply(
+  econ_aging_plot_6_plotly$x$data, FUN = function(x){
+  x$marker = list(opacity = 0)
+  return(x)}
+)
+
+econ_aging_plot_6_plotly %>% 
+  add_trace(
+    x=1,y=該校所屬村里老化指數,
+    type="scatter",mode="markers", name = "該校所屬鄉鎮市區", marker = list(color = "red")
+    ) %>% 
+  add_trace(
+    x=2,y=該校所屬村里老化指數,
+    type="scatter",mode="markers",name = "該校所屬鄉鎮市區", marker = list(color = "red"))
+```
+
+### leaflet
+
+```{r}
+
+lng <- choosen_school_data %>% select(lng) %>% unlist() %>% unname()
+
+lat <- choosen_school_data %>% select(lat) %>% unlist() %>% unname()
+
+city_county<- choosen_school_data %>% select(縣市鄉鎮) %>% unlist() %>% unname()
+
+sports %>% filter(縣市鄉鎮 == city_county) -> sports_data_leaflet
+
+library_data %>% filter(縣市鄉鎮 == city_county) ->  library_data_leaflet
+
+leaflet() %>% 
+  addTiles() %>% 
+  setView(lng = lng, lat= lat, zoom = 11) %>%
+  addMarkers(
+    lng = lng, lat = lat,
+    popup = str_c(county_name,school_name)) %>% 
+  addCircleMarkers(
+    data = sports_data_leaflet, radius = 8, stroke=T, fillOpacity = 0.7,
+    color = "#4d9221", popup = paste0(sports_data_leaflet$場館名稱," : ", sports_data_leaflet$場館分類)
+    ) %>% 
+  addCircleMarkers(
+    data = library_data_leaflet, radius = 8, stroke =T, fillOpacity =  0.7,
+    color = "#fdae61", popup = library_data_leaflet$圖書館名稱
+    )
+
+```
+
+## =========
+
+### 資料包裝
+
+```{r}
+# save(
+#   # plotly底圖*6
+#   culture_lib_spt_plot_1_plotly,
+#   life_density10909_plot_2_plotly,
+#   life_conv_finance_plot_3_plotly,
+#   life_hospital_plot_4_plotly,
+#   digital_plot_5_plotly,
+#   econ_aging_plot_6_plotly,
+#   # data
+#   library_data,
+#   sports,
+#   school_109,
+#   file = "support/data/finaldata.RData"
+# )
+```
+
+
+
+## =========
+
+### 問題
+#### 全國層級
+
+##### 各年趨勢
+
+###### 1. 總計趨勢
+
+```{r}
+merged_schoollist %>% 
+  group_by(年份,學生等級) %>% 
+  summarise(學校數量=length(學校代碼)) %>% 
+  ggplot(aes(x=年份,y=學校數量, fill = 學生等級))+
+  geom_col()
+```
+
+
+
+###### 4. 偏校佔該縣市學校數的比例為何？
+
+```{r}
+merged_schoollist %>% 
+  group_by(縣市名稱,年份) %>%
+  summarise(偏校總數=length(學校代碼)) %>% 
+  full_join(allschool, by = c("縣市名稱" = "縣市別", "年份" = "學年")) -> allschool
+
+allschool %>% mutate(
+  偏校比率 = round(偏校總數/校數總和,2)
+)
+```
+
+
+##### 109年為例
+
+###### 2. 哪個縣市較多、哪個縣市較少 - 109年
+
+```{r}
+# 109年偏校總數
+unique(schoollist$faraway_109$學校名稱) %>% length()
+unique(schoollist$faraway_109$學校代碼) %>% length()
+# 兩者不同，表示有學校名稱一樣，學校總數為1105間
+count(schoollist$faraway_109,學校名稱) %>% arrange(desc(n))
+#ex
+schoollist$faraway_109 %>% filter(
+  學校名稱 == "縣立成功國小"
+)
+
+#學校代碼unique
+count(schoollist$faraway_109,學校代碼) %>% arrange(desc(n))
+```
+
+```{r}
+schoollist$faraway_109 %>% 
+  group_by(縣市名稱,學生等級) %>% 
+  summarise(length(學校代碼)) %>% 
+  group_by(縣市名稱) %>%
+  mutate(合計 = sum(`length(學校代碼)`)) %>%
+  ggplot(aes(x=reorder(縣市名稱,合計),y=`length(學校代碼)`, fill = 學生等級)) +
+  geom_col()+
+  geom_hline(aes(yintercept = mean(`length(學校代碼)`)))+
+  coord_flip()
+```
+
+* 台南市第二名
+* 四個縣市沒有偏校：台北市、基隆線、新竹市、嘉義市
+* 為什麼這四個縣市沒有偏校，特別之處？
+-> 也許可以從其他成因指標探討
+
+
+###### 3. 哪個鄉鎮市區偏校數量最多 - 109
+
+```{r}
+merged_schoollist %>% 
+  filter(年份 == 109) %>%
+  mutate(縣市鄉鎮 = str_c(縣市名稱,鄉鎮市區)) %>% #避免縣市鄉鎮市區同名
+  group_by(縣市鄉鎮,縣市名稱) %>% 
+  summarise(學校數量 = length(學校代碼))  %>%
+  arrange(desc(學校數量))  -> schoolN_by_town_109
+
+schoolN_by_town_109
+```
+
+```{r}
+schoolN_by_town_109$學校數量 %>% quantile()
+schoolN_by_town_109$學校數量 %>% mean()
+```
+1. 在有偏校的鄉鎮市區裡，平均一個鄉鎮市區裡會有 4.78偏校
+2. 在有偏校的鄉鎮市區裡，偏校數量第三四分位點為 7
+
+```{r}
+schoolN_by_town_109 %>% 
+  filter(學校數量>=7) %>%
+  ggplot(aes(x=縣市名稱, y=學校數量, color = 縣市名稱))+
+  geom_point()
+  
+```
+
+3. 三個分級的比例
+```{r}
+schoollist$faraway_109 %>% 
+  group_by(地區屬性) %>% 
+  summarise(length(學校代碼))
+```
+
+4. 學生數/班級數分佈
+
+```{r}
+schoollist$faraway_109 %>% 
+  ggplot(aes(x=班級數,y=學生數總計, color = 縣市名稱)) +
+  geom_point()
+```
+
+#### 縣市內層級
+
+#### 學校層級

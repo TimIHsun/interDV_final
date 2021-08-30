@@ -1,0 +1,131 @@
+---
+drake_cache: ".ui"
+dependencies: "dependencies"
+output:
+  html_tag:
+    filename: "index.html"
+    dirpath: "`r library(econR); .r %//% 'docs'`"
+    object: "ui"
+---
+
+
+```{r makecondition}
+library(dplyr)
+library(shiny)
+library(htmltools)
+library(econR)
+library(ggplot2)
+library(dplyr)
+library(readxl)
+library(stringr)
+library(sysfonts)
+library(showtext)
+library(tidyselect)
+library(purrr)
+library(plotly)
+library(readxl)
+library(readr)
+library(patchwork)
+library(leaflet)
+font_add("QYuan","cwTeXQYuan-Medium.ttf") # 新增字體
+showtext_auto(enable=TRUE) #啟用字體
+load("support/data/finaldata.RData")
+
+```
+
+```{r dependencies}
+dependencies <- {
+  myown_deps <- htmltools::htmlDependency(
+      name="myown",
+      version="1.0.0",
+      src=c(file= .r %//% "assets"),
+      script = "js/myscript.js",
+      stylesheet="css/mystyle.css"
+    )
+  econR_deps <- econR::html_dependencies()
+  tagList(
+    econR_deps$jquery(),
+    econR_deps$materialise(),
+    myown_deps
+  )
+}
+```
+
+
+## =======================
+
+### Input
+
+```{r input_bins}
+input_bins <- sliderInput("bins",
+                        "Number of bins:",
+                        min = 1,
+                        max = 50,
+                        value = 30)
+```
+
+```{r input_selectcity}
+selectInput(
+  "selectcity",
+  "偏遠學校選單（國中小）",
+  unique(school_109$縣市學校名稱)
+)
+```
+
+  * Given label `input_bins` defined in the code chunk setup, `input_bins <-` can be ignored if you like.
+  
+### Output
+
+```{r output_distPlot}
+output_distPlot <- shiny::plotOutput("distPlot")
+```
+
+
+
+```{r output_leafletPlot}
+output_leafletPlot <- leafletOutput("leafletPlot")
+```
+## =======================
+
+### UI
+
+```{r ui}
+ui <- tags$body(
+  fluidPage(
+
+    # Application title
+    titlePanel("UI from ui.Rmd: Old Faithful Geyser Data"),
+
+    # Sidebar with a slider input for number of bins 
+    sidebarLayout(
+        sidebarPanel(
+            input_selectcity
+        ),
+
+        # Show a plot of the generated distribution
+        mainPanel(
+           output_leafletPlot
+        )
+    )
+))
+```
+
+
+
+## =======================
+
+
+## Browse
+
+```{r}
+web$browse()
+```
+
+
+
+
+
+## JS
+
+
+<!--JS end-->
