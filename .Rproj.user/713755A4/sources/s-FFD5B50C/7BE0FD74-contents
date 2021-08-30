@@ -72,10 +72,41 @@ selectInput(
 )
 ```
 
+```{r input_selectcity1}
+input_selectcity1 <- selectInput(
+  "selectcity1",
+  "縣市",
+  unique(school_109_bycity$縣市名稱)
+)
+```
+
   * Given label `input_bins` defined in the code chunk setup, `input_bins <-` can be ignored if you like.
   
 ### Output
 
+#### 縣市
+
+```{r output_desctextcity}
+output_desctextcity <- textOutput("desctextcity")
+```
+
+```{r output_desctextcity2}
+output_desctextcity2 <- verbatimTextOutput("desctextcity2")
+```
+
+```{r output_plotlycity}
+output_plotlycity <- plotlyOutput("plotlycity")
+```
+
+```{r output_leafletplotcity}
+output_leafletplotcity <- leafletOutput("leafletplotcity")
+```
+
+```{r output_citymaptitle}
+output_citymaptitle <- textOutput("citymaptitle")
+```
+
+#### 個別學校
 ```{r output_leafletPlot}
 output_leafletPlot <- leafletOutput("leafletPlot")
 ```
@@ -126,12 +157,56 @@ output_plotly6 <- plotlyOutput("plotly6")
 
 ```{r modal}
 modal <- tags$div(
-tags$a(class="waves-effect waves-light btn modal-trigger", href="#modal1"," Modal"),
-
+  tags$a(class="waves-effect waves-light btn modal-trigger", href="#modal1","說明"),
   tags$div(id="modal1", class="modal", 
     tags$div(class="modal-content", 
-      tags$h4(" Modal Header"),
-      tags$p(" A bunch of text")
+      tags$h4(" 注意"),
+      tags$span(
+        class = "#ffcdd2 red lighten-4",
+        "箱形圖皆無顯示離群值（計算涵蓋所有資料）"
+        ),
+      tags$br(),
+      tags$hr(),
+      tags$h4(" 資料廣度"),
+      tags$p("偏校：偏校涵蓋的地區（鄉鎮市區/村里）"),
+      tags$p("全台：全台地區（鄉鎮市區/村里）"),
+      tags$hr(),
+      tags$h4(" 指標選定"),
+      tags$p("指標參考",
+      tags$a("《偏遠地區學校分級及認定標準》",href = "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=H0070076"),"之交通、文化、生活機能、數位環境
+及社會經濟條件因素各款評估指標："),
+      tags$div(
+        h6("交通因素"),
+        tags$p("一、學校所在地海拔高度。"),
+        tags$p("二、學校距火車站、高速鐵路站、大眾捷運系統站、輕軌系統站之最短行車距離。"),
+        tags$p("三、學校距直轄市、縣（市）政府首長辦公室所在地之最短行車距離。"),
+        tags$p("四、學校距鄉（鎮、市、區）公所之最短行車距離。")
+      ),
+      tags$div(
+        h6("文化因素"),
+        tags$p("一、學校位於山地鄉或直轄市山地原住民區。"),
+        tags$p("二、學校所在村（里）之高等教育肄（畢）業人口比率。"),
+        tags$p("三、學校所在鄉（鎮、市、區）之公私立幼兒園核定之招收人數。"),
+        tags$p("四、學校所在鄉（鎮、市、區）圖書館、博物館及運動場館之總數。")
+      ),
+      tags$div(
+        h6("生活機能因素"),
+        tags$p("一、學校所在村（里）之人口密度。"),
+        tags$p("二、學校所在鄉（鎮、市、區）郵政、金融機構及便利商店之總數。"),
+        tags$p("三、學校所在鄉（鎮、市、區）醫療院所數目。")
+      ),
+      tags$div(
+        h6("數位環境因素"),
+        tags$p("一、學校所在鄉（鎮、市、區）行動通信基地臺數目。"),
+        tags$p("二、學校所在鄉（鎮、市、區）中央行政機關室內公共區域免費無線上網
+    熱點數目。")
+      ),
+      tags$div(
+        h6("社會經濟條件因素"),
+        tags$p("一、學校所在村（里）年平均家戶所得。"),
+        tags$p("二、學校所在鄉（鎮、市、區）工商家數。"),
+        tags$p("三、學校所在村（里）老化指數。")
+      )
     ),
     tags$div(class="modal-footer", 
       tags$a(href="#!", class="modal-close waves-effect waves-green btn-flat"," 關閉")
@@ -140,25 +215,45 @@ tags$a(class="waves-effect waves-light btn modal-trigger", href="#modal1"," Moda
 )
 ```
 
+```{r citypage}
+citypage <- sidebarLayout(
+        sidebarPanel(
+            input_selectcity1,
+            output_desctextcity,
+            tags$br(),
+            output_desctextcity2,
+            tags$div(
+              tags$hr(),
+              h6("各縣市偏遠地區學校總計"),
+              output_plotlycity
+            )
+        ),
 
-```{r ui}
-ui <- tags$body(
-  fluidPage(
+        # Show a plot of the generated distribution
+        mainPanel(
+          tags$div(
+            class="row",
+            tags$div(
+              class = "col s12 m12 l12 card-panel #ffcc80 orange lighten-3 z-depth-1",
+              h3(output_citymaptitle)
+            ),
+            output_leafletplotcity
+          )
+        )
+    )
+```
 
-    # Application title
-    tags$div(
-      class = "card-panel teal lighten-2 z-depth-2",
-    titlePanel("偏遠地區學校儀表板")
-    ),
 
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
+```{r schoolpage}
+schoolpage <- sidebarLayout(
         sidebarPanel(
             input_selectcity,
             output_desctext,
+            tags$br(),
             output_desctext2,
             tags$div(
-              tags$hr()
+              tags$hr(),
+              "注意：資料量大，更新資料/重啟時可能會有等待的跳轉時間。"
             )
         ),
 
@@ -234,6 +329,29 @@ ui <- tags$body(
              )
            )
         )
+    )
+```
+
+
+```{r ui}
+ui <- tags$body(
+  fluidPage(
+
+    # Application title
+    tags$div(
+      class = "card-panel teal lighten-2 z-depth-2",
+    titlePanel("109年偏遠地區學校儀表板")
+    ),
+    tags$div(
+      navbarPage("層級",
+    tabPanel(
+      "個別縣市",
+      citypage),
+    tabPanel(
+      "個別學校",
+      schoolpage
+      )
+)
     )
 ))
 ```

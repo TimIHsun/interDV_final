@@ -53,6 +53,7 @@ reactive({
 ```{r makecondition_input}
 input_bins = 30
 
+input_selectcity1 = "宜蘭縣"
 ```
 
 
@@ -76,7 +77,134 @@ output_distPlot <-  {
 
 ```
 
-### text
+### 縣市
+
+#### text
+```{r render_desctextcity}
+render_desctextcity <- renderText
+```
+
+```{r output_desctextcity}
+output_desctextcity <- paste0(
+  input_selectcity1, "總計有",
+  school_109_bycity %>% filter(縣市名稱 == input_selectcity1) %>% select(學校數總計) %>% unlist() %>% unname() %>% unique(), "間偏遠地區學校（偏校），且其偏校總數排名為全台縣市第",
+  school_109_bycity %>% filter(縣市名稱 == input_selectcity1) %>% select(排名) %>% unlist() %>% unname() %>% unique(), "名。"
+)
+```
+
+```{r render_desctextcity2}
+render_desctextcity2 <- renderText
+```
+
+```{r output_desctextcity2}
+output_desctextcity2 <- paste0(
+  "偏遠學校數：",
+  if(length(
+    school_109_bycity %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "偏遠") %>% select(學校數) %>% unlist() %>% unname()) == 0
+    ){0}else{
+    school_109_bycity %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "偏遠") %>% select(學校數) %>% unlist() %>% unname() },
+  "\n","特偏學校數：",
+  if(
+    length(school_109_bycity %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "特偏") %>% select(學校數) %>% unlist() %>% unname()) == 0 
+    ){0}else{
+    school_109_bycity %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "特偏") %>% select(學校數) %>% unlist() %>% unname() },
+  "\n", "極偏學校數：",
+  if(
+    length(school_109_bycity %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "極偏") %>% select(學校數) %>% unlist() %>% unname()) == 0 
+    ){0}else{
+    school_109_bycity %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "極偏") %>% select(學校數) %>% unlist() %>% unname() }
+  
+)
+```
+
+```{r render_citymaptitle}
+render_citymaptitle <- renderText
+```
+
+```{r output_citymaptitle}
+output_citymaptitle <- paste0(input_selectcity1,"偏遠地區學校位置")
+```
+
+#### plotly
+```{r render_plotlycity}
+render_plotlycity <- renderPlotly
+```
+
+```{r output_plotlycity}
+output_plotlycity <- school_109_bycity_plotly
+```
+
+#### leaflet
+
+```{r render_leafletplotcity}
+render_leafletplotcity <- renderLeaflet
+```
+
+```{r icons1}
+icons1 <- awesomeIcons(
+  icon = 'ios-close',
+  iconColor = 'black',
+  library = 'ion'
+)
+```
+
+```{r icons2}
+icons2 <- awesomeIcons(
+  icon = 'ios-close',
+  iconColor = 'black',
+  library = 'ion',
+  markerColor = "red"
+)
+```
+
+```{r icons3}
+icons3 <- awesomeIcons(
+  icon = 'ios-close',
+  iconColor = 'black',
+  library = 'ion',
+  markerColor = "green"
+)
+```
+
+```{r output_leafletplotcity}
+output_leafletplotcity <- {
+  leaflet() %>%
+    addTiles() %>%
+    setView(
+      lng = head(school_109 %>% filter(縣市名稱 == input_selectcity1) %>% select(經度),1) %>% unlist() %>% unname(),
+      lat = head(school_109 %>% filter(縣市名稱 == input_selectcity1) %>% select(緯度),1) %>% unlist() %>% unname(),
+      zoom = 9
+    ) %>% 
+    addAwesomeMarkers(
+      lng = school_109 %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "偏遠") %>% select(經度) %>% unlist() %>% unname(),
+      lat = school_109 %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "偏遠") %>% select(緯度) %>% unlist() %>% unname(),
+      popup = paste0(
+        school_109 %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "偏遠") %>% select(學校名稱) %>% unlist() %>% unname(), "：偏遠"
+      ),
+      icon = icons1
+    ) %>% 
+    addAwesomeMarkers(
+      lng = school_109 %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "極偏") %>% select(經度) %>% unlist() %>% unname(),
+      lat = school_109 %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "極偏") %>% select(緯度) %>% unlist() %>% unname(),
+      popup = paste0(
+        school_109 %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "極偏") %>% select(學校名稱) %>% unlist() %>% unname(), "：極偏"
+      ),
+      icon = icons2
+    ) %>% 
+    addAwesomeMarkers(
+      lng = school_109 %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "特偏") %>% select(經度) %>% unlist() %>% unname(),
+      lat = school_109 %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "特偏") %>% select(緯度) %>% unlist() %>% unname(),
+      popup = paste0(
+        school_109 %>% filter(縣市名稱 == input_selectcity1 & 地區屬性 == "特偏") %>% select(學校名稱) %>% unlist() %>% unname(), "：特偏"
+      ),
+      icon = icons3
+    )
+}
+```
+
+
+### 個別學校
+#### text
 ```{r render_desctext}
 render_desctext <- renderText
 ```
@@ -135,7 +263,7 @@ output_allplotlytitle <- paste0(
 ```
 
 
-### leaflet
+#### leaflet
 ```{r render_leafletPlot}
 render_leafletPlot <- renderLeaflet
 ```
@@ -172,7 +300,7 @@ output_leafletPlot <- {
 }
 ```
 
-### plotly
+#### plotly
 
 ```{r render_plotly1}
 render_plotly1 <- renderPlotly

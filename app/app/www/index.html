@@ -30,19 +30,88 @@
 <link href="lib/myown-1.0.0/css/mystyle.css" rel="stylesheet" />
 <script src="lib/myown-1.0.0/js/myscript.js"></script>
   <title>偏遠地區學校儀表板</title>
+  <title>層級</title>
 </head>
 <body>
   <div class="container-fluid">
     <div class="card-panel teal lighten-2 z-depth-2">
       <h2>偏遠地區學校儀表板</h2>
     </div>
-    <div class="row">
-      <div class="col-sm-4">
-        <form class="well" role="complementary">
-          <div class="form-group shiny-input-container">
-            <label class="control-label" id="selectcity-label" for="selectcity">偏遠學校選單（國中小）</label>
-            <div>
-              <select id="selectcity"><option value="南投縣縣立清水國小" selected>南投縣縣立清水國小</option>
+    <div>
+      <nav class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <span class="navbar-brand">層級</span>
+          </div>
+          <ul class="nav navbar-nav" data-tabsetid="2040">
+            <li class="active">
+              <a href="#tab-2040-1" data-toggle="tab" data-value="個別縣市">個別縣市</a>
+            </li>
+            <li>
+              <a href="#tab-2040-2" data-toggle="tab" data-value="個別學校">個別學校</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <div class="container-fluid">
+        <div class="tab-content" data-tabsetid="2040">
+          <div class="tab-pane active" data-value="個別縣市" id="tab-2040-1">
+            <div class="row">
+              <div class="col-sm-4">
+                <form class="well" role="complementary">
+                  <div class="form-group shiny-input-container">
+                    <label class="control-label" id="selectcity1-label" for="selectcity1">縣市</label>
+                    <div>
+                      <select id="selectcity1"><option value="南投縣" selected>南投縣</option>
+<option value="嘉義市">嘉義市</option>
+<option value="嘉義縣">嘉義縣</option>
+<option value="基隆市">基隆市</option>
+<option value="宜蘭縣">宜蘭縣</option>
+<option value="屏東縣">屏東縣</option>
+<option value="彰化縣">彰化縣</option>
+<option value="新北市">新北市</option>
+<option value="新竹市">新竹市</option>
+<option value="新竹縣">新竹縣</option>
+<option value="桃園市">桃園市</option>
+<option value="澎湖縣">澎湖縣</option>
+<option value="臺中市">臺中市</option>
+<option value="臺北市">臺北市</option>
+<option value="臺南市">臺南市</option>
+<option value="臺東縣">臺東縣</option>
+<option value="花蓮縣">花蓮縣</option>
+<option value="苗栗縣">苗栗縣</option>
+<option value="連江縣">連江縣</option>
+<option value="金門縣">金門縣</option>
+<option value="雲林縣">雲林縣</option>
+<option value="高雄市">高雄市</option></select>
+                      <script type="application/json" data-for="selectcity1" data-nonempty="">{"plugins":["selectize-plugin-a11y"]}</script>
+                    </div>
+                  </div>
+                  <div id="desctextcity" class="shiny-text-output"></div>
+                  <div>
+                    <hr/>
+                  </div>
+                </form>
+              </div>
+              <div class="col-sm-8" role="main">
+                <div class="row">
+                  <div class="col s12 m12 l12 card-panel #ffcc80 orange lighten-3 z-depth-1">
+                    <h3>
+                      <div id="maptitle" class="shiny-text-output"></div>
+                    </h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane" data-value="個別學校" id="tab-2040-2">
+            <div class="row">
+              <div class="col-sm-4">
+                <form class="well" role="complementary">
+                  <div class="form-group shiny-input-container">
+                    <label class="control-label" id="selectcity-label" for="selectcity">偏遠學校選單（國中小）</label>
+                    <div>
+                      <select id="selectcity"><option value="南投縣縣立清水國小" selected>南投縣縣立清水國小</option>
 <option value="南投縣縣立中寮國中">南投縣縣立中寮國中</option>
 <option value="南投縣縣立廣福國小">南投縣縣立廣福國小</option>
 <option value="南投縣縣立永和國小">南投縣縣立永和國小</option>
@@ -1147,51 +1216,75 @@
 <option value="高雄市市立民生國小">高雄市市立民生國小</option>
 <option value="高雄市市立那瑪夏區民權國小">高雄市市立那瑪夏區民權國小</option>
 <option value="高雄市市立那瑪夏國中">高雄市市立那瑪夏國中</option></select>
-              <script type="application/json" data-for="selectcity" data-nonempty="">{"plugins":["selectize-plugin-a11y"]}</script>
+                      <script type="application/json" data-for="selectcity" data-nonempty="">{"plugins":["selectize-plugin-a11y"]}</script>
+                    </div>
+                  </div>
+                  <div id="desctext" class="shiny-text-output"></div>
+                  <pre class="shiny-text-output noplaceholder" id="desctext2"></pre>
+                  <div>
+                    <hr/>
+                  </div>
+                </form>
+              </div>
+              <div class="col-sm-8" role="main">
+                <div class="row">
+                  <div class="col s12 m12 l12 card-panel #ffcc80 orange lighten-3 z-depth-1">
+                    <h3>
+                      <div id="maptitle" class="shiny-text-output"></div>
+                    </h3>
+                  </div>
+                  <div id="leafletPlot" style="width:100%; height:400px; " class="leaflet html-widget html-widget-output"></div>
+                </div>
+                <div class="row">
+                  <div class="col s12 m12 l12 card-panel #ffcc80 orange lighten-3 z-depth-1">
+                    <div class="col s11 m11 l11 ">
+                      <h3>
+                        <div id="allplotlytitle" class="shiny-text-output"></div>
+                      </h3>
+                    </div>
+                    <div class="col s1 m1 l1">
+                      <h3></h3>
+                      <div>
+                        <a class="waves-effect waves-light btn modal-trigger" href="#modal1"> Modal</a>
+                        <div id="modal1" class="modal">
+                          <div class="modal-content">
+                            <h4> Modal Header</h4>
+                            <p> A bunch of text</p>
+                          </div>
+                          <div class="modal-footer">
+                            <a href="#!" class="modal-close waves-effect waves-green btn-flat"> 關閉</a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col s4 m4 l4 plotlyborder">
+                    <div class="plotlytitle #fff8e1 amber lighten-5 z-depth-1">鄉鎮圖書館體育館總和</div>
+                    <div id="plotly1" style="width:100%; height:400px; " class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme"></div>
+                  </div>
+                  <div class="col s4 m4 l4 plotlyborder">
+                    <div class="plotlytitle #fff8e1 amber lighten-5 z-depth-1">村里人口密度</div>
+                    <div id="plotly2" style="width:100%; height:400px; " class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme"></div>
+                  </div>
+                  <div class="col s4 m4 l4 plotlyborder">
+                    <div class="plotlytitle #fff8e1 amber lighten-5 z-depth-1">鄉鎮便利商店及金融保險業家數</div>
+                    <div id="plotly3" style="width:100%; height:400px; " class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme"></div>
+                  </div>
+                  <div class="col s4 m4 l4 plotlyborder">
+                    <div class="plotlytitle #fff8e1 amber lighten-5 z-depth-1">鄉鎮醫療院所家數</div>
+                    <div id="plotly4" style="width:100%; height:400px; " class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme"></div>
+                  </div>
+                  <div class="col s4 m4 l4 plotlyborder">
+                    <div class="plotlytitle #fff8e1 amber lighten-5 z-depth-1">鄉鎮基地台數</div>
+                    <div id="plotly5" style="width:100%; height:400px; " class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme"></div>
+                  </div>
+                  <div class="col s4 m4 l4 plotlyborder">
+                    <div class="plotlytitle #fff8e1 amber lighten-5 z-depth-1">村里老化指數</div>
+                    <div id="plotly6" style="width:100%; height:400px; " class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme"></div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div id="desctext" class="shiny-text-output"></div>
-          <pre class="shiny-text-output noplaceholder" id="desctext2"></pre>
-        </form>
-      </div>
-      <div class="col-sm-8" role="main">
-        <div class="row">
-          <div class="col s12 m12 l12 card-panel #ffcc80 orange lighten-3 z-depth-1">
-            <h3>
-              <div id="maptitle" class="shiny-text-output"></div>
-            </h3>
-          </div>
-          <div id="leafletPlot" style="width:100%; height:400px; " class="leaflet html-widget html-widget-output"></div>
-        </div>
-        <div class="row">
-          <div class="col s12 m12 l12 card-panel #ffcc80 orange lighten-3 z-depth-1">
-            <h3>
-              <div id="allplotlytitle" class="shiny-text-output"></div>
-            </h3>
-          </div>
-          <div class="col s4 m4 l4 plotlyborder">
-            <div class="plotlytitle #fff8e1 amber lighten-5 z-depth-1">鄉鎮圖書館體育館總和</div>
-            <div id="plotly1" style="width:100%; height:400px; " class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme"></div>
-          </div>
-          <div class="col s4 m4 l4 plotlyborder">
-            <div class="plotlytitle #fff8e1 amber lighten-5 z-depth-1">村里人口密度</div>
-            <div id="plotly2" style="width:100%; height:400px; " class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme"></div>
-          </div>
-          <div class="col s4 m4 l4 plotlyborder">
-            <div class="plotlytitle #fff8e1 amber lighten-5 z-depth-1">鄉鎮便利商店及金融保險業家數</div>
-            <div id="plotly3" style="width:100%; height:400px; " class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme"></div>
-          </div>
-          <div class="col s4 m4 l4 plotlyborder">
-            <div class="plotlytitle #fff8e1 amber lighten-5 z-depth-1">鄉鎮醫療院所家數</div>
-            <div id="plotly4" style="width:100%; height:400px; " class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme"></div>
-          </div>
-          <div class="col s4 m4 l4 plotlyborder">
-            <div class="plotlytitle #fff8e1 amber lighten-5 z-depth-1">鄉鎮基地台數</div>
-            <div id="plotly5" style="width:100%; height:400px; " class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme"></div>
-          </div>
-          <div class="col s4 m4 l4 plotlyborder">
-            <div class="plotlytitle #fff8e1 amber lighten-5 z-depth-1">村里老化指數</div>
-            <div id="plotly6" style="width:100%; height:400px; " class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme"></div>
           </div>
         </div>
       </div>

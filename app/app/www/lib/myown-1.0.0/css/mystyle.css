@@ -23,11 +23,22 @@ body {
 }
 
 .plotlytitle{
-  size: 32px;
+  size: 45px;
   text-align: center;
 }
 
 .plotlyborder{
   margin-top: 10px;
-  margin-right: 10px;
+}
+
+.plotlytitlefont{
+  font-size: 40.88px;
+}
+
+.navbar-default {
+    background-color: #F0F8FF ;
+}
+
+.navbar-default:hover {
+    background-color: #dcebf7 ;
 }

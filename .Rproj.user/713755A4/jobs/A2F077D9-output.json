@@ -1,0 +1,6 @@
+[1,"** Installing R Package Dependencies for Publishing: 'packrat', 'rsconnect'\n"]
+[2,"also installing the dependency ‘packrat’\n\n"]
+[2,"trying URL 'https://cran.rstudio.com/bin/macosx/contrib/4.1/packrat_0.7.0.tgz'\n"]
+[2,"Content type 'application/x-gzip' length 480186 bytes (468 KB)\n=="]
+[2,"==========="]
+[2,"=====================================\ndownloaded 468 KB\n\ntrying URL 'https://cran.rstudio.com/bin/macosx/contrib/4.1/rsconnect_0.8.24.tgz'\n"]
